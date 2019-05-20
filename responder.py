@@ -20,22 +20,25 @@ class Responder:
         self.client = client
         self.server = server
 
-        if self.request['request'] == 'create_game':
-            self.create_game()
+        if self.request['request'] == 'create_canvas':
+            self.create_canvas()
         elif self.request['request'] == 'move':
             self.move()
+        elif self.request['request'] == 'join_canvas':
+            self.join_canvas()
 
-    def create_game(self):
-        canvas = ''.join(random.SystemRandom().randint(0, 9) for _ in range (0, 5))
+    def create_canvas(self):
+        canvas = ''.join(str(random.SystemRandom().randint(0, 9)) for _ in range (0, 5))
         canvases.append(canvas)
-        users.append(self.client, {
+        users.append({'user': self.client, 'data': {
             'canvas': canvas,
-            'request_id': self.request['request_id']
-        })
+            'request_id': self.request['request_id'],
+            'head': True
+        }})
 
         self.send({'canvas': canvas, 'data': None})
 
-    def join_game(self):
+    def join_canvas(self):
         if self.request['canvas'] not in canvases:
             self.send({'error': 'This code is not active.'})
         

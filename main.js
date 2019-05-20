@@ -1,4 +1,16 @@
-var CONNURL = "wss://home.omarelamri.me:9001"
+function start() {
+    document.getElementById("middle").remove();
+    document.body.style.background = "none";
+
+    sc.add({request: "create_canvas"}, (data) => {
+        var code = document.createElement("h1");
+        code.appendChild(document.createTextNode("Canvas Join Code: " + data.canvas));
+        code.className += "element"
+        document.body.appendChild(code);
+    })
+}
+
+var CONNURL = "ws://home.omarelamri.me:9001"
 
 var ServerconnService = /** @class */ (function () {
     function ServerconnService() {
