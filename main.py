@@ -21,9 +21,9 @@ def start_server():
     server.run_forever()
 
 def client_left(client, server):
-    for user, req in users:
-        if user == client:
-            users.remove((user, req))
+    for user in users:
+        if user['user'] == client:
+            users.remove(user)
 
 if __name__ == "__main__":
     try:

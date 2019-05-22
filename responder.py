@@ -22,8 +22,8 @@ class Responder:
 
         if self.request['request'] == 'create_canvas':
             self.create_canvas()
-        elif self.request['request'] == 'move':
-            self.move()
+        elif self.request['request'] == 'send_to_canvas':
+            self.send_to_canvas()
         elif self.request['request'] == 'join_canvas':
             self.join_canvas()
 
@@ -36,25 +36,46 @@ class Responder:
             'head': True
         }})
 
-        self.send({'canvas': canvas, 'data': None})
+        self.send({'canvas': canvas})
 
     def join_canvas(self):
         if self.request['canvas'] not in canvases:
             self.send({'error': 'This code is not active.'})
         
-        users.append(self.client, {
+        total_x, total_y = 0, 0
+
+        x, y = 0, 0
+
+        for user in users:
+            if user['data']['canvas'] == self.request['canvas']:
+                total_x += user['data']['size']['x']
+                total_y += user['data']['size']['y']
+
+        if total_x >= total_y:
+            x = total_x
+            y = 0
+        else:
+            x = 0
+            y = total_y
+
+        users.append({'user': self.client, 'data': {
             'canvas': self.request['canvas'],
-            'request_id': self.request['request_id']
-        })
+            'request_id': self.request['request_id'],
+            'size' : self.request['size'],
+            'start_pos': {
+                'x': x,
+                'y': y
+            }
+        }})
 
-
-        
-
-    def move(self):
-        for player, info in users:
-            message = {'index': self.request['index'], 'x': self.request['x'], 'y': self.request['y'], 'response_id': info['request_id']}
-            string_message = json.dumps(message)
-            self.server.send_message(player, string_message)
+    def send_to_canvas(self):
+        for user in users:
+            if user['data']['canvas'] == self.request['canvas']:
+                message = {
+                    'response_id': user['data']['request_id'],
+                    'message': self.request['message']
+                }
+                self.server.send_message(user['user'], message)
 
     def send(self, message):
         message['response_id'] = self.request['request_id']
