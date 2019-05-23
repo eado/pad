@@ -29,8 +29,11 @@ class Responder:
     def create_canvas(self):
         canvas = ''.join(str(random.SystemRandom().randint(0, 9)) for _ in range (0, 5))
         canvases.append(canvas)
+
+        user_id = len([user for user in users if user['data']['canvas'] == canvas])
+
         users.append({'user': self.client, 'data': {
-            'user_id': len(users),
+            'user_id': user_id,
             'canvas': canvas,
             'request_id': self.request['request_id'],
             'head': True
@@ -41,15 +44,15 @@ class Responder:
     def join_canvas(self):
         if self.request['canvas'] not in canvases:
             self.send({'error': 'This code is not active.'})
+            return
 
-        total_x, total_y = 0, 0
+        def getMaxUser(user, dim):
+            return user['data'].get('start_pos', {}).get(dim, 0) + user['data'].get('size', {}).get(dim, 0)
+
+        total_x = getMaxUser(max(users, key=lambda user: getMaxUser(user, 'x')), 'x')
+        total_y = getMaxUser(max(users, key=lambda user: getMaxUser(user, 'y')), 'y')
 
         x, y = 0, 0
-
-        for user in users:
-            if user['data']['canvas'] == self.request['canvas']:
-                total_x += user['data']['size']['x']
-                total_y += user['data']['size']['y']
 
         if total_x >= total_y:
             x = total_x
@@ -58,8 +61,8 @@ class Responder:
             x = 0
             y = total_y
     
+        user_id = len([user for user in users if user['data']['canvas'] == self.request['canvas']])
         users.append({'user': self.client, 'data': {
-            'user_id': len(users),
             'canvas': self.request['canvas'],
             'request_id': self.request['request_id'],
             'size' : self.request['size'],
@@ -69,9 +72,14 @@ class Responder:
             }
         }})
 
-        self.send_to_canvas({'header': 'new_client', 'size': self.request['size'], 'start_pos': {'x': x, 'y': y}})
+        total_x = getMaxUser(max(users, key=lambda user: getMaxUser(user, 'x')), 'x')
+        total_y = getMaxUser(max(users, key=lambda user: getMaxUser(user, 'y')), 'y')
 
-        self.send({'message': None})
+        self.send_to_canvas({'header': 'new_client', 'size': self.request['size'], 
+                             'start_pos': {'x': x, 'y': y}, 
+                             'total_size': {'x': total_x, 'y': total_y}, 'user_id': user_id})
+
+        self.send({'message': None, 'size': self.request['size'], 'start_pos': {'x': x, 'y': y}, 'user_id': user_id})
 
     def send_to_canvas(self, c_message=None):
         for user in users:
@@ -81,10 +89,15 @@ class Responder:
                     message = c_message
                 else:
                     message = {
-                        'response_id': user['data']['request_id'],
                         'message': self.request['message']
                     }
-                self.server.send_message(user['user'], message)
+                send_message = {
+                    'message': message,
+                    'response_id': user['data']['request_id']
+                }
+
+                print(send_message)
+                self.server.send_message(user['user'], json.dumps(send_message))
 
     def send(self, message):
         message['response_id'] = self.request['request_id']

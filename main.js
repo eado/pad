@@ -2,15 +2,66 @@ function start() {
     document.getElementById("middle").remove();
     document.body.style.background = "none";
 
+    let clients = []
+
     sc.add({request: "create_canvas"}, (data) => {
-        var code = document.createElement("h1");
-        code.appendChild(document.createTextNode("Canvas Join Code: " + data.canvas));
-        code.className += "element"
-        document.body.appendChild(code);
+        if (!data.message) {
+            var code = document.createElement("h1");
+            code.appendChild(document.createTextNode("Canvas Join Code: " + data.canvas));
+            code.className += "element"
+            code.style.zIndex = 10000
+            document.body.appendChild(code);
+        } else {
+            if (data.message.header == "new_client") {
+                clients.push({size: data.message.size, start_pos: data.message.start_pos, user_id: data.message.user_id})
+                console.log(clients)
+                
+                for (let old of document.getElementsByClassName("client")) {
+                    old.remove()
+                }
+
+                for (let client of clients) {
+                    let clientNode = document.createElement("div")
+                    clientNode.className += "element client"
+                    clientNode.appendChild(document.createTextNode(client.user_id));
+                    clientNode.style.top = (client.start_pos.y / data.message.total_size.y) * 100 + "%"
+                    clientNode.style.left = (client.start_pos.x / data.message.total_size.x) * 100 + "%"
+                    clientNode.style.width = (client.size.x / data.message.total_size.x) * 100 + "%"
+                    clientNode.style.height = (client.size.y / data.message.total_size.y) * 100 + "%"
+                    clientNode.style.backgroundColor = "lightblue"
+                    clientNode.style.border = "3px solid black"
+                    clientNode.style.fontSize = "3em"
+
+                    document.body.appendChild(clientNode)
+                }
+            }
+        }
     })
 }
 
-var CONNURL = "ws://home.omarelamri.me:9001"
+function join() {
+    let codeNode = document.getElementById("code");
+    let code = codeNode.value
+
+    sc.add({request: "join_canvas", canvas: code, size: {x: innerWidth, y: innerHeight}}, (data) => {
+        console.log(data)
+        if (!data.error) {
+            if (!data.message) {
+                document.getElementById("middle").remove();
+                document.body.style.background = "none";
+                var code = document.createElement("h1");
+                code.appendChild(document.createTextNode(data.user_id));
+                code.className += "element"
+                code.style.fontSize = "10em"
+                code.style.width = "100%"
+                code.style.textAlign = "center"
+                document.body.appendChild(code);
+            }
+        }
+    })
+}
+
+var CONNURL = "ws://localhost:9001"
 
 var ServerconnService = /** @class */ (function () {
     function ServerconnService() {
