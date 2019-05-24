@@ -47,14 +47,14 @@ class Responder:
             return
 
         def getMaxUser(user, dim):
-            return user['data'].get('start_pos', {}).get(dim, 0) + user['data'].get('size', {}).get(dim, 0)
+            return user['data'].get('start_pos', {}).get(dim, 0) + user['data'].get('size', {}).get(dim, 0) if user['data']['canvas'] == self.request['canvas'] else 0
 
         total_x = getMaxUser(max(users, key=lambda user: getMaxUser(user, 'x')), 'x')
         total_y = getMaxUser(max(users, key=lambda user: getMaxUser(user, 'y')), 'y')
 
         x, y = 0, 0
 
-        if total_x >= total_y:
+        if total_x < total_y:
             x = total_x
             y = 0
         else:
@@ -88,9 +88,7 @@ class Responder:
                 if c_message:
                     message = c_message
                 else:
-                    message = {
-                        'message': self.request['message']
-                    }
+                    message = self.request['message']
                 send_message = {
                     'message': message,
                     'response_id': user['data']['request_id']
