@@ -16,15 +16,15 @@ Screenshots and a live web link will be added soon.
 
 ## Screenshots
 ### Landing
-![landing](landing.png)
+![landing](screenshots/landing.png)
 ### Device Layout
-![device layout](screenlayout.png)
+![device layout](screenshots/screenlayout.png)
 ### Device Identification (just a number lol)
-![device id](userid.png)
+![device id](screenshots/userid.png)
 ### Toolbox (more later)
-![toolbox](toolbox.png)
+![toolbox](screenshots/toolbox.png)
 ### Options
-![options](options.png)
+![options](screenshots/options.png)
 
 ## Credits
 - Johan Hanssen Seferidis under the MIT License
