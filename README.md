@@ -1,3 +1,4 @@
+![pad](favicon.ico)
 # Pad
 
 Combines multiple devices into one continuous canvas.  
@@ -13,7 +14,18 @@ Screenshots and a live web link will be added soon.
     - The server sends the WebSocket frame to all the other users in the pad.
     - See the `send_to_canvas` method in responder.py and `ServerconnService` in main.js.
 
+## Screenshots
+### Landing
+![landing](landing.png)
+### Device Layout
+![device layout](screenlayout.png)
+### Device Identification (just a number lol)
+![device id](userid.png)
+### Toolbox (more later)
+![toolbox](toolbox.png)
+### Options
+![options](options.png)
+
 ## Credits
 - Johan Hanssen Seferidis under the MIT License
     - websocket_server.py
-    
