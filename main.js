@@ -1,23 +1,43 @@
+// Global Variables
+
 let size = {x: 0, y: 0}
 let total_size = {x: 0, y: 0}
 let start_pos = {x: 0, y: 0}
+
 let canvas_code = "";
+
+let clients = []
+
 
 function translatePoint(pos) {
     return {x: pos.x - start_pos.x, y: pos.y - start_pos.y};
 }
 
-function start() {
-    document.getElementById("middle").remove();
-    document.body.style.background = "none";
+function showToolbox() {
+    document.getElementById("toolbox").hidden = false
+}
 
-    let clients = []
+function closeToolbox() {
+    document.getElementById("toolbox").hidden = true
+}
+
+function openOptions() {
+    document.getElementById("options").hidden = false
+}
+
+function closeOptions() {
+    document.getElementById("options").hidden = true
+}
+
+function start() {
+    document.getElementById("landing").remove();
+    document.body.style.background = "none";
 
     sc.add({request: "create_canvas"}, (data) => {
         if (!data.message) {
             var code = document.createElement("h1");
             code.appendChild(document.createTextNode("Canvas Join Code: " + data.canvas));
-            code.className += "element start";
+            code.className += "element";
             document.body.appendChild(code);
 
             canvas_code = data.canvas
@@ -31,6 +51,8 @@ function start() {
                 sc.add({request: 'send_to_canvas', canvas: canvas_code, message: {'header': 'start'}})
                 const removeElements = (elms) => elms.forEach(el => el.remove());
                 removeElements( document.querySelectorAll(".start") );
+                
+                document.getElementById("toolbox-btn").hidden = false
             }
 
             document.body.appendChild(start)
@@ -65,13 +87,15 @@ function start() {
 
 function join() {
     let codeNode = document.getElementById("code");
-    let code = codeNode.value
+    let codeVal = codeNode.value
 
-    sc.add({request: "join_canvas", canvas: code, size: {x: innerWidth, y: innerHeight}}, (data) => {
+    size = {x: innerWidth, y: innerHeight}
+
+    sc.add({request: "join_canvas", canvas: codeVal, size: size}, (data) => {
         console.log(data)
         if (!data.error) {
             if (!data.message) {
-                document.getElementById("middle").remove();
+                document.getElementById("landing").remove();
                 document.body.style.background = "none";
                 var code = document.createElement("h1");
                 code.appendChild(document.createTextNode(data.user_id));
@@ -80,18 +104,26 @@ function join() {
                 code.style.width = "100%"
                 code.style.textAlign = "center"
                 document.body.appendChild(code);
+
+                canvas_code = codeVal
+                start_pos = data.start_pos
             } else {
-                if (data.message.header == "start") {
-                    console.log("removing")
+                if (data.message.header == "new_client") {
+                    clients.push({size: data.message.size, start_pos: data.message.start_pos, user_id: data.message.user_id})
+                    total_size = data.message.total_size
+                } else if (data.message.header == "start") {
                     const removeElements = (elms) => elms.forEach(el => el.remove());
                     removeElements( document.querySelectorAll(".start") );
+                    document.getElementById("toolbox-btn").hidden = false
                 }
             }
         }
     })
 }
 
-var CONNURL = "ws://localhost:9001"
+// WebSocket server connection API
+
+var CONNURL = "ws://10.0.1.72:9001"
 
 var ServerconnService = /** @class */ (function () {
     function ServerconnService() {

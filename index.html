@@ -12,7 +12,7 @@
     <title>Pad</title>
 </head>
 <body>
-    <div id="middle">
+    <div class="middle" id="landing">
         <h1>Pad</h1>
         <h3>Enter code</h3>
         <input type="text" id="code"></input>
@@ -20,6 +20,24 @@
         <button onclick="join()">Go</button>
         <h3>or</h3>
         <button onclick="start()">Start pad</button>
+    </div>
+    <a id="toolbox-btn" class="element" hidden="true" onclick="showToolbox()">⚙︎</a>
+    <div id="toolbox" class="element middle" hidden="true">
+        <a class="top-right" onclick="closeToolbox()">Close</a>
+        <a class="top-left" onclick="openOptions()">Options</a>
+        <h1>Toolbox</h1>
+        <button>Add Card Deck</button>
+    </div>
+    <div id="options" class="element middle" hidden="true">
+        <a class="top-right" onclick="closeOptions()">Close</a>
+        <h1>Options</h1>
+        <button>Add to center</button>
+        <input type="text"></input>
+        <button>Add to user id</button>
+        <h3>Sizing</h3>
+        <button>Intrinsic</button>
+        <button>Full</button><br>
+        <button>To Device</button>
     </div>
 </body>
 </html>

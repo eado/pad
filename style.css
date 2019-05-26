@@ -11,7 +11,7 @@ body {
     transition: all 0.5s;
 }
 
-#middle {
+.middle {
     box-shadow: 0 0 20px #555;
     background: rgba(255,255,255,0.8);
     border-radius: 20px;
@@ -26,32 +26,32 @@ body {
 }
 
 @media screen and (max-width: 900px) and (min-width: 450px) {
-    #middle {
+    .middle {
         width: 60%;
         left: 20%;
     }
 }
 
 @media screen and (max-width: 450px) {
-    #middle {
+    .middle {
         width: 80%;
         left: 10%;
     }
 }
 
 @media screen and (max-height: 700px) {
-    #middle {
+    .middle {
         height: 80%;
         top: 10%;
     }
 }
 
-#middle h1 {
+.middle h1 {
     font-size: 4em;
     font-weight: 500;
 }
 
-#middle input, button {
+.middle input, button {
     text-align: inherit;
     font-size: 1.5em;
     width: 70%;
@@ -61,17 +61,54 @@ body {
     border: 5px solid rgb(208,0,0);
 }
 
-#middle button {
+.middle button {
     height: 1.7em;
     color: rgb(208,0,0);
     background-color: transparent;
     transition: all 0.25s;
 }
 
-#middle button:hover {
+.middle button:hover {
     background: white;
 }
 
 .element {
     position: fixed;
+}
+
+button.start {
+    text-align: center;
+    background: white;
+    color: rgb(208,0,0);
+}
+
+#toolbox-btn {
+    font-size: 3vh;
+    top: 0;
+    left: 1vh;
+}
+
+.top-right {
+    text-align: right; 
+    right: 5%; 
+    position: absolute;
+}
+
+.top-left {
+    text-align: right; 
+    left: 5%; 
+    position: absolute;
+}
+
+.element.middle {
+    background: white
+}
+
+.element.middle button, input {
+    margin-bottom: 5px;
+}
+
+.btn-inverse {
+    color: white;
+    background: rgb(208,0,0)
 }
