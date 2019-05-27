@@ -5,6 +5,7 @@ users = []
 
 canvases = []
 
+
 class Responder:
     """
     Responds to client requests.
@@ -42,11 +43,13 @@ class Responder:
     def create_canvas(self):
         """Creates a canvas with a randomly generated canvas code."""
         # Generating canvas code
-        canvas = ''.join(str(random.SystemRandom().randint(0, 9)) for _ in range (0, 5))
+        canvas = ''.join(str(random.SystemRandom().randint(0, 9))
+                         for _ in range(0, 5))
         canvases.append(canvas)
 
         # Generating user_id from # of users in canvas
-        user_id = len([user for user in users if user['data']['canvas'] == canvas])
+        user_id = len(
+            [user for user in users if user['data']['canvas'] == canvas])
 
         users.append({'user': self.client, 'data': {
             'user_id': user_id,
@@ -65,7 +68,7 @@ class Responder:
             return
 
         # Finding the dimensions of the whole canvas
-        def getMaxUser(user, dim):
+        def getMaxDim(user, dim):
             """
             Finds the maximum dimension of a device.
 
@@ -81,29 +84,51 @@ class Responder:
             `int`
                 Largest dimension by device
             """
-            return user['data'].get('start_pos', {}).get(dim, 0) + user['data'].get('size', {}).get(dim, 0) if user['data']['canvas'] == self.request['canvas'] else 0
+            return (user['data'].get('start_pos', {}).get(dim, 0) +
+                    user['data'].get('size', {}).get(dim, 0)
+                    if user['data']['canvas'] == self.request['canvas']
+                    else 0)
 
-        total_x = getMaxUser(max(users, key=lambda user: getMaxUser(user, 'x')), 'x')
-        total_y = getMaxUser(max(users, key=lambda user: getMaxUser(user, 'y')), 'y')
-
-        x, y = 0, 0
+        total_x = getMaxDim(
+            max(users, key=lambda user: getMaxDim(user, 'x')), 'x')
+        total_y = getMaxDim(
+            max(users, key=lambda user: getMaxDim(user, 'y')), 'y')
 
         # Tesselation algorithm
-        # TODO: Improve tesselation algorithim
-        if total_x < total_y:
-            x = total_x
-            y = 0
-        else:
-            x = 0
-            y = total_y
-    
+        def find_optimal_pos():
+            for x_i in range(0, total_x, 10):  # Iterate over every x value in the canvas
+                for y_i in range(0, total_y, 10):  # Over every y value
+                    available = False
+                    for user in users:  # Over every device
+                        # Check if device is part of the canvas, and is not the head
+                        if user['data']['canvas'] == self.request['canvas'] and not user['data'].get('head'):
+                            print(x_i, y_i, self.request['size'], user['data']['start_pos'], user['data']['size']) 
+                            if ((x_i > (user['data']['start_pos']['x'] + user['data']['size']['x'])) or # Check new position is not within x bounds of device  
+                                (y_i > (user['data']['start_pos']['y'] + user['data']['size']['y']))): # Not within y bounds
+                                available = True
+                            else:
+                                available = False
+                                break
+                    if available:
+                        print(x_i, y_i)
+                        return x_i, y_i
+
+            if total_x < total_y:
+                return total_x, 0
+            else:
+                return 0, total_y
+        
+        # Fallback if no spot available
+        x, y = find_optimal_pos()
+
         # Generating user_id from # of users in canvas
-        user_id = len([user for user in users if user['data']['canvas'] == self.request['canvas']])
+        user_id = len([user for user in users if user['data']
+                       ['canvas'] == self.request['canvas']])
 
         users.append({'user': self.client, 'data': {
             'canvas': self.request['canvas'],
             'request_id': self.request['request_id'],
-            'size' : self.request['size'],
+            'size': self.request['size'],
             'start_pos': {
                 'x': x,
                 'y': y
@@ -111,20 +136,23 @@ class Responder:
         }})
 
         # Recalculating dimension w/ new user
-        total_x = getMaxUser(max(users, key=lambda user: getMaxUser(user, 'x')), 'x')
-        total_y = getMaxUser(max(users, key=lambda user: getMaxUser(user, 'y')), 'y')
+        total_x = getMaxDim(
+            max(users, key=lambda user: getMaxDim(user, 'x')), 'x')
+        total_y = getMaxDim(
+            max(users, key=lambda user: getMaxDim(user, 'y')), 'y')
 
         # Send new client to all devices
-        self.send_to_canvas({'header': 'new_client', 'size': self.request['size'], 
-                             'start_pos': {'x': x, 'y': y}, 
+        self.send_to_canvas({'header': 'new_client', 'size': self.request['size'],
+                             'start_pos': {'x': x, 'y': y},
                              'total_size': {'x': total_x, 'y': total_y}, 'user_id': user_id})
 
-        self.send({'message': None, 'size': self.request['size'], 'start_pos': {'x': x, 'y': y}, 'user_id': user_id})
+        self.send({'message': None, 'size': self.request['size'], 'start_pos': {
+                  'x': x, 'y': y}, 'user_id': user_id})
 
     def send_to_canvas(self, c_message=None):
         """
         Sends a message from one device to all devices in the canvas.
-        
+
         Parameters
         ----------
         `c_message : dict`
@@ -142,13 +170,13 @@ class Responder:
                     'response_id': user['data']['request_id']
                 }
 
-                print(send_message)
-                self.server.send_message(user['user'], json.dumps(send_message))
+                self.server.send_message(
+                    user['user'], json.dumps(send_message))
 
     def send(self, message):
         """
         Sends a message from one device to all devices in the canvas.
-        
+
         Parameters
         ----------
         `message : dict`

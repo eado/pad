@@ -66,13 +66,13 @@ function start() {
 
                 for (let client of clients) {
                     let clientNode = document.createElement("div")
-                    clientNode.className += "element client start"
+                    clientNode.className += "element client"
                     clientNode.appendChild(document.createTextNode(client.user_id));
                     clientNode.style.top = (client.start_pos.y / (data.message.total_size.y)) * 90 + 10 + "%"
                     clientNode.style.left = (client.start_pos.x / data.message.total_size.x) * 100 + "%"
                     clientNode.style.width = (client.size.x / data.message.total_size.x) * 100 + "%"
                     clientNode.style.height = (client.size.y / (data.message.total_size.y)) * 90 + "%"
-                    clientNode.style.backgroundColor = "lightblue"
+                    clientNode.style.backgroundColor = "rgb(208, 0, 0)"
                     clientNode.style.border = "3px solid black"
                     clientNode.style.fontSize = "3em"
 
