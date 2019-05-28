@@ -26,18 +26,18 @@
         <a class="top-right" onclick="closeToolbox()">Close</a>
         <a class="top-left" onclick="openOptions()">Options</a>
         <h1>Toolbox</h1>
-        <button>Add Card Deck</button>
+        <button onclick="addCards()">Add Card Deck</button>
     </div>
     <div id="options" class="element middle" hidden="true">
         <a class="top-right" onclick="closeOptions()">Close</a>
         <h1>Options</h1>
-        <button>Add to center</button>
-        <input type="text"></input>
-        <button>Add to user id</button>
+        <button id="center" class="btn-inverse" onclick="setAdd('center')">Add to center</button>
+        <input id="userin" type="text"></input>
+        <button id="user" onclick="setAdd('user')">Add to user id</button>
         <h3>Sizing</h3>
-        <button>Intrinsic</button>
-        <button>Full</button><br>
-        <button>To Device</button>
+        <button id="intrinsic" class="btn-inverse" onclick="setAdd('intrinsic')">Intrinsic</button>
+        <button id="full" onclick="setAdd('full')">Full</button><br>
+        <button id="device" onclick="setAdd('device')">To Device</button>
     </div>
 </body>
 </html>

@@ -94,29 +94,72 @@ class Responder:
         total_y = getMaxDim(
             max(users, key=lambda user: getMaxDim(user, 'y')), 'y')
 
-        # Tesselation algorithm
-        def find_optimal_pos():
-            for x_i in range(0, total_x, 10):  # Iterate over every x value in the canvas
-                for y_i in range(0, total_y, 10):  # Over every y value
-                    available = False
-                    for user in users:  # Over every device
-                        # Check if device is part of the canvas, and is not the head
-                        if user['data']['canvas'] == self.request['canvas'] and not user['data'].get('head'):
-                            print(x_i, y_i, self.request['size'], user['data']['start_pos'], user['data']['size']) 
-                            if ((x_i > (user['data']['start_pos']['x'] + user['data']['size']['x'])) or # Check new position is not within x bounds of device  
-                                (y_i > (user['data']['start_pos']['y'] + user['data']['size']['y']))): # Not within y bounds
-                                available = True
-                            else:
-                                available = False
-                                break
-                    if available:
-                        print(x_i, y_i)
-                        return x_i, y_i
-
-            if total_x < total_y:
-                return total_x, 0
+        def part_of_canvas(user):
+            if user['data']['canvas'] == self.request['canvas'] and not user['data'].get('head'):
+                return user
             else:
-                return 0, total_y
+                return None
+
+        def check_pos(x_i, y_i):
+            available = True
+            for user in filter(part_of_canvas, users):
+                if not ((x_i >= (user['data']['start_pos']['x'] + user['data']['size']['x'])) or # Check new position is not within x bounds of device  
+                    (y_i >= (user['data']['start_pos']['y'] + user['data']['size']['y']))): # Not within y bounds
+                    available = False
+
+            return available
+
+        def change_to_total(pos):
+            x_change = self.request['size']['x'] + pos[0] - total_x
+            y_change = self.request['size']['y'] + pos[1] - total_y
+
+            if x_change < 0:
+                x_change = 0
+            if y_change < 0:
+                y_change = 0
+
+            return x_change + y_change
+
+        # Tesselation algorithm — Took much longer than it should have!
+        def find_optimal_pos():
+            pot_p = []
+
+            for user in filter(part_of_canvas, users):
+                x_i, y_i = user['data']['start_pos']['x'], user['data']['start_pos']['y'] + user['data']['size']['y']
+                x_t, y_t = user['data']['size']['x'] + user['data']['start_pos']['x'], user['data']['start_pos']['y']
+
+                i_o = check_pos(x_i, y_i)
+                t_o = check_pos(x_t, y_t)
+
+                if not i_o:
+                    if t_o:
+                        pot_p.append((x_t, y_t))
+
+                if not t_o:
+                    if i_o:
+                        pot_p.append((x_i, y_i))
+
+                if not (i_o and t_o):
+                    continue
+
+                pot_p.append((x_t, y_t))
+                pot_p.append((x_i, y_i))
+
+            all_change = True
+            for pos in pot_p:
+                if change_to_total(pos) <= 0:
+                    all_change = False
+            
+            if all_change:
+                if total_x < total_y:
+                    return total_x, 0
+                else:
+                    return 0, total_y
+
+            if len(pot_p) > 0:
+                return min(pot_p, key=change_to_total)
+                
+            return 0, 0
         
         # Fallback if no spot available
         x, y = find_optimal_pos()

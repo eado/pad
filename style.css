@@ -24,6 +24,8 @@ body {
     color: rgb(208,0,0);
     transition: all 0.5s;
     z-index: 100;
+
+    overflow: scroll
 }
 
 @media screen and (max-width: 900px) and (min-width: 450px) {
@@ -110,6 +112,11 @@ button.start {
 }
 
 .btn-inverse {
-    color: white;
-    background: rgb(208,0,0)
+    color: white !important;
+    background: rgb(208,0,0) !important
+}
+
+.btn {
+    color: rgb(208,0,0) !important;
+    background: white !important
 }

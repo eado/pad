@@ -3,10 +3,14 @@
 let size = {x: 0, y: 0}
 let total_size = {x: 0, y: 0}
 let start_pos = {x: 0, y: 0}
+let user_id = "";
 
 let canvas_code = "";
 
 let clients = []
+
+let addTo = "center"
+let sizing = "intrinsic"
 
 
 function translatePoint(pos) {
@@ -27,6 +31,62 @@ function openOptions() {
 
 function closeOptions() {
     document.getElementById("options").hidden = true
+}
+
+function setAdd(string) {
+    if (string == "center") {
+        document.getElementById("center").className = " btn-inverse"
+        document.getElementById("user").className = " btn"
+
+        addTo = "center"
+    } else if (string == "user") {
+        document.getElementById("user").className = " btn-inverse"
+        document.getElementById("center").className = " btn"
+
+        addTo = "user"
+    } else if (string == "intrinsic") {
+        document.getElementById("intrinsic").className = " btn-inverse"
+        document.getElementById("full").className = " btn"
+        document.getElementById("device").className = " btn"
+
+        sizing = "intrinsic"
+    } else if (string == "full") {
+        document.getElementById("full").className = " btn-inverse"
+        document.getElementById("intrinsic").className = " btn"
+        document.getElementById("device").className = " btn"
+
+        sizing = "full"
+    } else if (string == "device") {
+        document.getElementById("device").className = "btn-inverse"
+        document.getElementById("full").className = "btn"
+        document.getElementById("intrinsic").className = "btn"
+
+        sizing = "device"
+    }
+}
+
+function getAddPosition() {
+    if (addTo == "center") {
+        return {x: total_size.x / 2, y: total_size.y / 2};
+    } else {
+        for (let user of clients) {
+            if (user.user_id == document.getElementById("userin").value) {
+                return user.start_pos
+            }
+        }
+
+        return start_pos;
+    }
+}
+
+function addCards() {
+    sc.add({request: "send_to_canvas", canvas: canvas_code, message: 
+        {
+            header: "add",
+            type: "deck",
+            pos: getAddPosition()
+        }
+    })
 }
 
 function start() {
@@ -67,6 +127,7 @@ function start() {
                 for (let client of clients) {
                     let clientNode = document.createElement("div")
                     clientNode.className += "element client"
+                    clientNode.style.boxSizing = "border-box";
                     clientNode.appendChild(document.createTextNode(client.user_id));
                     clientNode.style.top = (client.start_pos.y / (data.message.total_size.y)) * 90 + 10 + "%"
                     clientNode.style.left = (client.start_pos.x / data.message.total_size.x) * 100 + "%"
@@ -107,6 +168,8 @@ function join() {
 
                 canvas_code = codeVal
                 start_pos = data.start_pos
+
+                user_id = data.user_id
             } else {
                 if (data.message.header == "new_client") {
                     clients.push({size: data.message.size, start_pos: data.message.start_pos, user_id: data.message.user_id})
@@ -115,11 +178,39 @@ function join() {
                     const removeElements = (elms) => elms.forEach(el => el.remove());
                     removeElements( document.querySelectorAll(".start") );
                     document.getElementById("toolbox-btn").hidden = false
+
+                    document.getElementById("toolbox-btn").innerHTML += " " + user_id
+
+                    // document.body.addEventListener("mousedown", (evt) => { sc.add({request: "send_to_canvas", canvas: canvas_code, message: {header: "touch_down", pos: {x: evt.}}}) })
+                    // document.body.addEventListener("mousemove", mousemove)
+                    // document.body.addEventListener("mouseup", mouseup)
+
+                } else if (data.message.header == "add") {
+                    if (data.message.type == "deck") {
+                        let suits = ['clovers', 'hearts', 'spades', 'diamonds']
+
+                        let index = 0;
+                        for (let suit of suits) {
+                            for (let i = 1; i <= 13; i++) {
+                                let imageNode = document.createElement("img")
+                                imageNode.src = "static/cardimgs/" + suit + "-" + i + ".png"
+                                imageNode.className += "element celement"
+
+                                imageNode.id = uuidv4()
+                                
+                                imageNode.style.top = translatePoint(data.message.pos).y + index + "px"
+                                imageNode.style.left = translatePoint(data.message.pos).x + index + "px"
+                                
+                                document.body.appendChild(imageNode)
+                                index += 10;
+                            }
+                        }
+                    }
                 }
             }
         }
     })
-}
+} 
 
 // WebSocket server connection API
 
