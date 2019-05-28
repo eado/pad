@@ -89,6 +89,7 @@ button.start {
     font-size: 3vh;
     top: 0;
     left: 1vh;
+    z-index: 100;
 }
 
 .top-right {
