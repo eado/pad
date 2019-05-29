@@ -23,7 +23,7 @@ body {
     text-align: center;
     color: rgb(208,0,0);
     transition: all 0.5s;
-    z-index: 100;
+    z-index: 100000000000;
 
     overflow: scroll
 }
@@ -89,7 +89,7 @@ button.start {
     font-size: 3vh;
     top: 0;
     left: 1vh;
-    z-index: 100;
+    z-index: 100000000000;
 }
 
 .top-right {

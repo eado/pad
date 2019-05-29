@@ -12,6 +12,10 @@ let clients = []
 let addTo = "center"
 let sizing = "intrinsic"
 
+let maxZIndex = 10
+
+let objects = []
+
 
 function translatePoint(pos) {
     return {x: pos.x - start_pos.x, y: pos.y - start_pos.y};
@@ -205,6 +209,8 @@ function join() {
                                 imageNode.style.top = translatePoint(data.message.pos).y + index + "px"
                                 imageNode.style.left = translatePoint(data.message.pos).x + index + "px"
                                 
+                                objects.push({element: imageNode, touches: []})
+
                                 document.body.appendChild(imageNode)
                                 index += 10;
                             }
@@ -212,30 +218,47 @@ function join() {
                     }
                 } else if (data.message.header == "touch_down") {
                     let pos = translatePoint(data.message.pos);
-                    for (let element of document.getElementsByClassName("celement")) {
-                        let elementData = JSON.parse(element.name)
-                        if (pos.x >= element.style.left && pos.x <= (element.style.left + element.width) &&
-                            pos.y >= element.style.top && pos.y <= (element.style.top + element.height)) {
-                                if (elementData.touches) {
-                                    elementData.touches.append({
+                    for (let object of objects) {
+                        let element = object.element
 
-                                    })
-                                } else {
-                                    elementData.touches = [{
+                        if (pos.x >= element.offsetLeft && pos.x <= (element.offsetLeft + element.width) &&
+                            pos.y >= element.offsetTop && pos.y <= (element.offsetTop + element.height)) {
+                                console.log("hello")
+                                object.touches.push(
+                                    {
                                         touch_id: data.message.touch_id,
-                                        offsetPos: {x: pos.x - element.style.left, y: pos.y - element.style.top}
-                                    }]
-                                }
-                                element.name = JSON.stringify(elementData)
+                                        offsetPos: {x: pos.x - element.offsetLeft, y: pos.y - element.offsetTop}
+                                    }
+                                )
+                                element.style.zIndex = maxZIndex
+                                maxZIndex += 1;
                                 return
                         }
                     }
                 } else if (data.message.header == "touch_move") {
-                    let pos = data.message.pos;
-                    for (let element of document.getElementsByClassName("celement")) {
-                        let elementData = JSON.parse(element.name)
-                        for (let touch of elementData.touches) {
-                            
+                    let pos = translatePoint(data.message.pos);
+                    for (let object of objects) {
+                        let element = object.element
+                        for (let touch of object.touches) {
+                            console.log("pre_match")
+                            console.log(touch)
+                            console.log(data.message.touch_id)
+                            if (touch.touch_id == data.message.touch_id) {
+                                console.log("match")
+                                element.style.left = pos.x - touch.offsetPos.x + "px";
+                                element.style.top = pos.y - touch.offsetPos.y + "px";
+                            }
+                        }
+                    }
+                } else if (data.message.header == "touch_up") {
+                    console.log("hi")
+                    for (let object of objects) {
+                        let element = object.element
+
+                        for (let touch in object.touches) {
+                            if (touch.touch_id == data.message.touch_id) {
+                                object.touches.pop(touch)
+                            }
                         }
                     }
                 }
@@ -248,6 +271,7 @@ let mouseID = uuidv4()
 let touchIDs = []
 
 function mouseevent(type, evt) {
+    evt.preventDefault();
     sc.add({
         request: "send_to_canvas", 
         canvas: canvas_code, 
@@ -261,7 +285,7 @@ function mouseevent(type, evt) {
 
 // WebSocket server connection API
 
-var CONNURL = "ws://10.10.215.146:9001"
+var CONNURL = "ws://10.0.1.72:9001"
 
 var ServerconnService = /** @class */ (function () {
     function ServerconnService() {
