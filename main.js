@@ -127,7 +127,6 @@ function start() {
         } else {
             if (data.message.header == "new_client") {
                 clients.push({size: data.message.size, start_pos: data.message.start_pos, user_id: data.message.user_id})
-                console.log(clients)
 
                 const removeElements = (elms) => elms.forEach(el => el.remove());
                 removeElements( document.querySelectorAll(".client") );
@@ -161,7 +160,6 @@ function join() {
     size = {x: innerWidth, y: innerHeight}
 
     sc.add({request: "join_canvas", canvas: codeVal, size: size}, (data) => {
-        console.log(data)
         if (!data.error) {
             if (!data.message) {
                 document.getElementById("landing").remove();
@@ -192,6 +190,10 @@ function join() {
                     document.body.addEventListener("mousedown", (evt) => { mouseevent("down", evt) })
                     document.body.addEventListener("mousemove", (evt) => { mouseevent("move", evt) })
                     document.body.addEventListener("mouseup", (evt) => { mouseevent("up", evt) })
+                    document.addEventListener("touchstart", (evt) => { touchevent("down", evt) })
+                    document.addEventListener("touchmove", (evt) => { touchevent("move", evt) })
+                    document.addEventListener("touchend", (evt) => { touchevent("up", evt) })
+                    document.addEventListener("touchcancel", (evt) => { touchevent("up", evt) })
 
                 } else if (data.message.header == "add") {
                     if (data.message.type == "deck") {
@@ -218,16 +220,16 @@ function join() {
                     }
                 } else if (data.message.header == "touch_down") {
                     let pos = translatePoint(data.message.pos);
-                    for (let object of objects) {
+                    for (let object of objects.reverse()) {
                         let element = object.element
 
                         if (pos.x >= element.offsetLeft && pos.x <= (element.offsetLeft + element.width) &&
                             pos.y >= element.offsetTop && pos.y <= (element.offsetTop + element.height)) {
-                                console.log("hello")
                                 object.touches.push(
                                     {
                                         touch_id: data.message.touch_id,
-                                        offsetPos: {x: pos.x - element.offsetLeft, y: pos.y - element.offsetTop}
+                                        offsetPos: {x: pos.x - element.offsetLeft, y: pos.y - element.offsetTop},
+                                        pos: pos
                                     }
                                 )
                                 element.style.zIndex = maxZIndex
@@ -239,27 +241,30 @@ function join() {
                     let pos = translatePoint(data.message.pos);
                     for (let object of objects) {
                         let element = object.element
+
                         for (let touch of object.touches) {
-                            console.log("pre_match")
-                            console.log(touch)
-                            console.log(data.message.touch_id)
                             if (touch.touch_id == data.message.touch_id) {
-                                console.log("match")
-                                element.style.left = pos.x - touch.offsetPos.x + "px";
-                                element.style.top = pos.y - touch.offsetPos.y + "px";
+                                touch.pos = pos
+                            }
+                        }
+                        if (object.touches.length > 1) {
+                            let touch1 = object.touches[0]
+                            let touch2 = object.touches[1]
+
+                            element.style.left = touch
+                        }
+                        if (object.touches.length < 2) {
+                            for (let touch of object.touches) {
+                                if (touch.touch_id == data.message.touch_id) {
+                                    element.style.left = pos.x - touch.offsetPos.x + "px";
+                                    element.style.top = pos.y - touch.offsetPos.y + "px";
+                                }
                             }
                         }
                     }
                 } else if (data.message.header == "touch_up") {
-                    console.log("hi")
                     for (let object of objects) {
-                        let element = object.element
-
-                        for (let touch in object.touches) {
-                            if (touch.touch_id == data.message.touch_id) {
-                                object.touches.pop(touch)
-                            }
-                        }
+                        object.touches = object.touches.filter(item => item.touch_id !== data.message.touch_id)
                     }
                 }
             }
@@ -271,21 +276,48 @@ let mouseID = uuidv4()
 let touchIDs = []
 
 function mouseevent(type, evt) {
-    evt.preventDefault();
-    sc.add({
-        request: "send_to_canvas", 
-        canvas: canvas_code, 
-        message: {
-            header: "touch_" + type, 
-            pos: deTranslatePoint({x: evt.clientX, y: evt.clientY}),
-            touch_id: mouseID
+    if (document.getElementById("toolbox").hidden) {
+        evt.preventDefault();
+        sc.add({
+            request: "send_to_canvas", 
+            canvas: canvas_code, 
+            message: {
+                header: "touch_" + type, 
+                pos: deTranslatePoint({x: evt.clientX, y: evt.clientY}),
+                touch_id: mouseID
+            }
+        }) 
+    }
+}
+
+function touchevent(type, evt) {
+    if (document.getElementById("toolbox").hidden) {
+        evt.preventDefault();
+
+        let index = 0;
+        for (let touch of evt.changedTouches) {
+            console.log(evt.changedTouches)
+            if (index >= touchIDs.length) {
+                touchIDs.push(uuidv4())
+            }
+            sc.add({
+                request: "send_to_canvas", 
+                canvas: canvas_code, 
+                message: {
+                    header: "touch_" + type, 
+                    pos: deTranslatePoint({x: touch.clientX, y: touch.clientY}),
+                    touch_id: touchIDs[index]
+                }
+            }) 
+
+            index += 1;
         }
-    }) 
+    }
 }
 
 // WebSocket server connection API
 
-var CONNURL = "ws://10.0.1.72:9001"
+var CONNURL = "ws://10.10.215.146:9001"
 
 var ServerconnService = /** @class */ (function () {
     function ServerconnService() {
