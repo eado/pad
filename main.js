@@ -17,6 +17,11 @@ let maxZIndex = 10
 let objects = []
 
 
+function reload() {
+    location = location
+}
+
+
 function translatePoint(pos) {
     return {x: pos.x - start_pos.x, y: pos.y - start_pos.y};
 }
@@ -93,6 +98,17 @@ function addCards() {
             header: "add",
             type: "deck",
             pos: getAddPosition()
+        }
+    })
+}
+
+function addYT() {
+    sc.add({request: "send_to_canvas", canvas: canvas_code, message: 
+        {
+            header: "add",
+            type: "yt",
+            pos: getAddPosition(),
+            ytid: document.getElementById("ytid").value
         }
     })
 }
@@ -210,13 +226,17 @@ function join() {
                                 
                                 imageNode.style.top = translatePoint(data.message.pos).y + index + "px"
                                 imageNode.style.left = translatePoint(data.message.pos).x + index + "px"
-                                
-                                objects.push({element: imageNode, touches: []})
 
                                 document.body.appendChild(imageNode)
+                                
+                                objects.push({element: imageNode, touches: []})
+                                
+
                                 index += 10;
                             }
                         }
+                    } else if (data.message.type == "yt") {
+
                     }
                 } else if (data.message.header == "touch_down") {
                     let pos = translatePoint(data.message.pos);
@@ -229,7 +249,12 @@ function join() {
                                     {
                                         touch_id: data.message.touch_id,
                                         offsetPos: {x: pos.x - element.offsetLeft, y: pos.y - element.offsetTop},
-                                        pos: pos
+                                        pos: deTranslatePoint(pos),
+                                        initialPos: deTranslatePoint(pos),
+                                        initialSize: element.getBoundingClientRect(),
+                                        initialOffset: {x: pos.x - element.offsetLeft, y: pos.y - element.offsetTop},
+                                        lastPos: deTranslatePoint(pos),
+                                        posIndex: 0
                                     }
                                 )
                                 element.style.zIndex = maxZIndex
@@ -244,16 +269,61 @@ function join() {
 
                         for (let touch of object.touches) {
                             if (touch.touch_id == data.message.touch_id) {
-                                touch.pos = pos
+                                if (touch.posIndex > 1) {
+                                    touch.lastPos = touch.pos
+                                    touch.posIndex = 0
+                                }
+                                touch.pos = deTranslatePoint(pos)
+                                touch.posIndex += 1
                             }
                         }
                         if (object.touches.length > 1) {
-                            let touch1 = object.touches[0]
-                            let touch2 = object.touches[1]
+                            let touch1 = translatePoint(object.touches[0].pos)
+                            let touch2 = translatePoint(object.touches[1].pos)
+                            let itouch1 = translatePoint(object.touches[0].initialPos)
+                            let itouch2 = translatePoint(object.touches[1].initialPos)
+                            let offset1 = object.touches[0].offsetPos
+                            let offset2 = object.touches[1].offsetPos
 
-                            element.style.left = touch
+                            console.log(touch1)
+                            console.log(touch2)
+                            console.log(itouch1)
+                            console.log(itouch2)
+                            console.log(offset1)
+                            console.log(offset2)
+
+                            let cpos = {x: (touch1.x + touch2.x) / 2, y: (touch1.y + touch2.y) / 2}
+                            let coffset = {x: (offset1.x + offset2.x) / 2, y: (offset1.y + offset2.y) / 2}
+
+                            let dpos = Math.sqrt(Math.pow(touch1.x - touch2.x, 2) + Math.pow(touch1.y - touch2.y, 2))
+                            let dipos = Math.sqrt(Math.pow(itouch1.x - itouch2.x, 2) + Math.pow(itouch1.y - itouch2.y, 2))
+
+                            
+
+                            console.log(dpos)
+                            console.log(dipos)
+
+                            let ratio = dpos / dipos
+
+                            console.log(ratio)
+
+                            console.log(object.touches[0].initialSize)
+
+                            element.width = object.touches[0].initialSize.width * ratio
+                            element.height = object.touches[0].initialSize.height * ratio
+
+                            element.style.left = cpos.x - (coffset.x * ratio) + "px";
+                            element.style.top = cpos.y - (coffset.y * ratio)+ "px";
+
+                            element.style.transform = "rotate(" + (Math.atan((touch2.y - touch1.y) / (touch2.x - touch1.x)) * 180 / Math.PI) + "deg)"
+
+                            // offset1.x = object.touches[0].initialOffset.x * ratio
+                            // offset1.y = object.touches[0].initialOffset.y * ratio
+                            // offset2.x = object.touches[1].initialOffset.x * ratio
+                            // offset2.y = object.touches[1].initialOffset.y * ratio
+
                         }
-                        if (object.touches.length < 2) {
+                        if (object.touches.length == 1) {
                             for (let touch of object.touches) {
                                 if (touch.touch_id == data.message.touch_id) {
                                     element.style.left = pos.x - touch.offsetPos.x + "px";
@@ -264,7 +334,53 @@ function join() {
                     }
                 } else if (data.message.header == "touch_up") {
                     for (let object of objects) {
+                        let touch = object.touches[0]
                         object.touches = object.touches.filter(item => item.touch_id !== data.message.touch_id)
+
+                        if (object.touches.length < 1 && touch != undefined) {
+                            let distx = (touch.pos.x - touch.lastPos.x)
+                            let disty = (touch.pos.y - touch.lastPos.y)
+
+                            let disabled = false
+                            let disabledx = false
+                            let disabledy = false
+                            setInterval(() => {
+                                if (object.touches.length < 1 && !disabled) {
+                                    if (!disabledx) {
+                                        object.element.style.left = (object.element.offsetLeft + distx) + "px"
+                                        console.log(distx)
+                                        if (distx > 0) {
+                                            distx -= 1
+                                            if (distx < 0) {
+                                                disabledx = true
+                                            }
+                                        } else {
+                                            distx += 1
+                                            if (distx > 0) {
+                                                disabledx = true
+                                            }
+                                        }
+                                    }
+                                    if (!disabledy) {
+                                        console.log(disty)
+                                        object.element.style.top = (object.element.offsetTop + disty) + "px"
+                                        if (disty > 0) {
+                                            disty -= 1
+                                            if (disty < 0) {
+                                                disabledy = true
+                                            }
+                                        } else {
+                                            disty += 1
+                                            if (disty > 0) {
+                                                disabledy = true
+                                            }
+                                        }
+                                    }
+                                } else {
+                                    disabled = true;
+                                }
+                            }, 10)
+                        }
                     }
                 }
             }
@@ -273,7 +389,6 @@ function join() {
 } 
 
 let mouseID = uuidv4()
-let touchIDs = []
 
 function mouseevent(type, evt) {
     if (document.getElementById("toolbox").hidden) {
@@ -292,32 +407,25 @@ function mouseevent(type, evt) {
 
 function touchevent(type, evt) {
     if (document.getElementById("toolbox").hidden) {
-        evt.preventDefault();
+        // evt.preventDefault();
 
-        let index = 0;
         for (let touch of evt.changedTouches) {
-            console.log(evt.changedTouches)
-            if (index >= touchIDs.length) {
-                touchIDs.push(uuidv4())
-            }
             sc.add({
                 request: "send_to_canvas", 
                 canvas: canvas_code, 
                 message: {
                     header: "touch_" + type, 
                     pos: deTranslatePoint({x: touch.clientX, y: touch.clientY}),
-                    touch_id: touchIDs[index]
+                    touch_id: touch.identifier
                 }
             }) 
-
-            index += 1;
         }
     }
 }
 
 // WebSocket server connection API
 
-var CONNURL = "ws://10.10.215.146:9001"
+var CONNURL = "ws://10.0.1.72:9001"
 
 var ServerconnService = /** @class */ (function () {
     function ServerconnService() {

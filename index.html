@@ -9,6 +9,7 @@
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <script src="main.js"></script>
+    <script src="https://www.youtube.com/iframe_api"></script>
     <title>Pad</title>
 </head>
 <body>
@@ -27,12 +28,15 @@
         <a class="top-left" onclick="openOptions()">Options</a>
         <h1>Toolbox</h1>
         <button onclick="addCards()">Add Card Deck</button>
+        <input id="ytid" type="text" placeholder="YouTube Video ID"></input>
+        <button id="ytadd" onclick="addYT()">Add YouTube Video</button>
+        <button onclick="reload()">Reload</button>
     </div>
     <div id="options" class="element middle" hidden="true">
         <a class="top-right" onclick="closeOptions()">Close</a>
         <h1>Options</h1>
         <button id="center" class="btn-inverse" onclick="setAdd('center')">Add to center</button>
-        <input id="userin" type="text"></input>
+        <input id="userin" placeholder="User ID" type="text"></input>
         <button id="user" onclick="setAdd('user')">Add to user id</button>
         <h3>Sizing</h3>
         <button id="intrinsic" class="btn-inverse" onclick="setAdd('intrinsic')">Intrinsic</button>
