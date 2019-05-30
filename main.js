@@ -204,8 +204,10 @@ function join() {
                     document.getElementById("toolbox-btn").innerHTML += " " + user_id
 
                     document.body.addEventListener("mousedown", (evt) => { mouseevent("down", evt) })
+                    // document.body.addEventListener("mouseover", (evt) => { mouseevent("down", evt) })  
                     document.body.addEventListener("mousemove", (evt) => { mouseevent("move", evt) })
                     document.body.addEventListener("mouseup", (evt) => { mouseevent("up", evt) })
+                    document.body.addEventListener("mouseout", (evt) => { mouseevent("up", evt) })
                     document.addEventListener("touchstart", (evt) => { touchevent("down", evt) })
                     document.addEventListener("touchmove", (evt) => { touchevent("move", evt) })
                     document.addEventListener("touchend", (evt) => { touchevent("up", evt) })
@@ -245,8 +247,13 @@ function join() {
 
                         if (pos.x >= element.offsetLeft && pos.x <= (element.offsetLeft + element.width) &&
                             pos.y >= element.offsetTop && pos.y <= (element.offsetTop + element.height)) {
-                                object.touches.push(
-                                    {
+                                let initialAngle = 0
+                                if (object.touches.length > 1) {
+                                    let touch1 = object.touches[0]
+                                    let touch2 = object.touches[1]
+                                    initialAngle = (Math.atan((touch2.y - touch1.y) / (touch2.x - touch1.x)) * 180 / Math.PI)
+                                }
+                                object.touches.push({
                                         touch_id: data.message.touch_id,
                                         offsetPos: {x: pos.x - element.offsetLeft, y: pos.y - element.offsetTop},
                                         pos: deTranslatePoint(pos),
@@ -254,9 +261,9 @@ function join() {
                                         initialSize: element.getBoundingClientRect(),
                                         initialOffset: {x: pos.x - element.offsetLeft, y: pos.y - element.offsetTop},
                                         lastPos: deTranslatePoint(pos),
-                                        posIndex: 0
-                                    }
-                                )
+                                        posIndex: 0,
+                                        initialAngle: initialAngle
+                                })
                                 element.style.zIndex = maxZIndex
                                 maxZIndex += 1;
                                 return
@@ -315,7 +322,7 @@ function join() {
                             element.style.left = cpos.x - (coffset.x * ratio) + "px";
                             element.style.top = cpos.y - (coffset.y * ratio)+ "px";
 
-                            element.style.transform = "rotate(" + (Math.atan((touch2.y - touch1.y) / (touch2.x - touch1.x)) * 180 / Math.PI) + "deg)"
+                            element.style.transform = "rotate(" + ((Math.atan((touch2.y - touch1.y) / (touch2.x - touch1.x)) * 180 / Math.PI) - object.touches[0].initialAngle) + "deg)"
 
                             // offset1.x = object.touches[0].initialOffset.x * ratio
                             // offset1.y = object.touches[0].initialOffset.y * ratio
@@ -338,8 +345,8 @@ function join() {
                         object.touches = object.touches.filter(item => item.touch_id !== data.message.touch_id)
 
                         if (object.touches.length < 1 && touch != undefined) {
-                            let distx = (touch.pos.x - touch.lastPos.x)
-                            let disty = (touch.pos.y - touch.lastPos.y)
+                            let distx = (touch.pos.x - touch.lastPos.x) * 0.8
+                            let disty = (touch.pos.y - touch.lastPos.y) * 0.8
 
                             let disabled = false
                             let disabledx = false
@@ -349,13 +356,16 @@ function join() {
                                     if (!disabledx) {
                                         object.element.style.left = (object.element.offsetLeft + distx) + "px"
                                         console.log(distx)
+                                        if (object.offsetLeft <= 0 || object.offsetLeft >= total_size.x) {
+                                            distx = -distx
+                                        }
                                         if (distx > 0) {
-                                            distx -= 1
+                                            distx -= 2
                                             if (distx < 0) {
                                                 disabledx = true
                                             }
                                         } else {
-                                            distx += 1
+                                            distx += 2
                                             if (distx > 0) {
                                                 disabledx = true
                                             }
@@ -364,13 +374,16 @@ function join() {
                                     if (!disabledy) {
                                         console.log(disty)
                                         object.element.style.top = (object.element.offsetTop + disty) + "px"
+                                        if (object.offsetTop <= 0 || object.offsetTop >= total_size.y) {
+                                            disty = -disty
+                                        }
                                         if (disty > 0) {
-                                            disty -= 1
+                                            disty -= 2
                                             if (disty < 0) {
                                                 disabledy = true
                                             }
                                         } else {
-                                            disty += 1
+                                            disty += 2
                                             if (disty > 0) {
                                                 disabledy = true
                                             }
@@ -425,7 +438,7 @@ function touchevent(type, evt) {
 
 // WebSocket server connection API
 
-var CONNURL = "ws://10.0.1.72:9001"
+var CONNURL = "ws://10.10.215.146:9001"
 
 var ServerconnService = /** @class */ (function () {
     function ServerconnService() {
