@@ -9,7 +9,6 @@
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <script src="main.js"></script>
-    <script src="https://www.youtube.com/iframe_api"></script>
     <title>Pad</title>
 </head>
 <body>
@@ -28,9 +27,18 @@
         <a class="top-left" onclick="openOptions()">Options</a>
         <h1>Toolbox</h1>
         <button onclick="addCards()">Add Card Deck</button>
+        <button id="openyt" onclick="ytOpen()">Open YouTube Options</button>
+        <button onclick="reload()">Reload</button>
+    </div>
+    <div id="yttoolbox" class="element middle" hidden="true">
+        <a class="top-right" onclick="ytClose()">Close</a>
+        <h1>YouTube Options</h1>
         <input id="ytid" type="text" placeholder="YouTube Video ID"></input>
         <button id="ytadd" onclick="addYT()">Add YouTube Video</button>
-        <button onclick="reload()">Reload</button>
+        <button id="ytplay" onclick="ytSet('play')">Play YouTube Video</button>
+        <input id="ytseekin" type="text" placeholder="Seconds"></input>
+        <button id="ytseek" onclick="ytSet('seek')">Seek</button>
+        <button id="ytstop" onclick="ytSet('stop')">Stop YouTube Video</button>
     </div>
     <div id="options" class="element middle" hidden="true">
         <a class="top-right" onclick="closeOptions()">Close</a>
@@ -38,10 +46,11 @@
         <button id="center" class="btn-inverse" onclick="setAdd('center')">Add to center</button>
         <input id="userin" placeholder="User ID" type="text"></input>
         <button id="user" onclick="setAdd('user')">Add to user id</button>
-        <h3>Sizing</h3>
+        <!-- <h3>Sizing</h3>
         <button id="intrinsic" class="btn-inverse" onclick="setAdd('intrinsic')">Intrinsic</button>
         <button id="full" onclick="setAdd('full')">Full</button><br>
-        <button id="device" onclick="setAdd('device')">To Device</button>
+        <button id="device" onclick="setAdd('device')">To Device</button> -->
     </div>
+    <div class="element celement" id="ytplayer"></div>
 </body>
 </html>

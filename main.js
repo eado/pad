@@ -1,3 +1,5 @@
+var CONNURL = "ws://10.0.1.27:9001"
+
 // Global Variables
 
 let size = {x: 0, y: 0}
@@ -16,6 +18,23 @@ let maxZIndex = 10
 
 let objects = []
 
+let globalPlayer;
+
+var tag = document.createElement('script');
+
+tag.src = "https://www.youtube.com/iframe_api";
+var firstScriptTag = document.getElementsByTagName('script')[0];
+firstScriptTag.parentNode.insertBefore(tag, firstScriptTag);
+
+function onYouTubeIframeAPIReady() {
+    globalPlayer = new YT.Player('ytplayer', {
+      height: '390',
+      width: '640',
+      videoId: 'M7lc1UVf-VE'
+    });
+    document.getElementById("ytplayer").hidden = true
+    objects.push({element: document.getElementById("ytplayer"), touches: []})
+}
 
 function reload() {
     location = location
@@ -44,6 +63,14 @@ function openOptions() {
 
 function closeOptions() {
     document.getElementById("options").hidden = true
+}
+
+function ytOpen() {
+    document.getElementById("yttoolbox").hidden = false
+}
+
+function ytClose() {
+    document.getElementById("yttoolbox").hidden = true
 }
 
 function setAdd(string) {
@@ -108,9 +135,22 @@ function addYT() {
             header: "add",
             type: "yt",
             pos: getAddPosition(),
-            ytid: document.getElementById("ytid").value
+            ytid: document.getElementById("ytid").value,
         }
     })
+}
+
+function ytSet(set) {
+    let message = {
+        header: "yt",
+        set: set,
+        num: 0,
+        timestamp: Date.now()
+    }
+    if (set == "seek") {
+        message.num = document.getElementById("ytseekin").value
+    }
+    sc.add({request: "send_to_canvas", canvas: canvas_code, message: message})
 }
 
 function start() {
@@ -170,6 +210,7 @@ function start() {
 }
 
 function join() {
+
     let codeNode = document.getElementById("code");
     let codeVal = codeNode.value
 
@@ -238,7 +279,36 @@ function join() {
                             }
                         }
                     } else if (data.message.type == "yt") {
+                        let playerNode = document.getElementById("ytplayer")
 
+                        playerNode.style.top = translatePoint({x: 0, y: 0}).y + "px"; 
+                        playerNode.style.left = translatePoint({x: 0, y: 0}).x + "px";
+
+                        playerNode.width = total_size.x
+                        playerNode.height = total_size.y
+
+                        globalPlayer.loadVideoById(data.message.ytid, 0)
+                        setTimeout(() => {
+                            globalPlayer.pauseVideo()
+                        }, 1000)
+
+                        playerNode.hidden = false
+                    }
+                } else if (data.message.header == "yt") {
+                    if (data.message.set == "play") {
+                        setInterval(() => {
+                            console.log("hello")
+                            console.log(data.message.timestamp)
+                            console.log(Date.now())
+                            if (data.message.timestamp + 1000 <= Date.now()) {
+                                
+                                globalPlayer.playVideo()
+                            }
+                        }, 1)
+                    } else if (data.message.set == "stop") {
+                        globalPlayer.pauseVideo()
+                    } else if (data.message.set == "seek") {
+                        globalPlayer.seekTo(Number(data.message.num))
                     }
                 } else if (data.message.header == "touch_down") {
                     let pos = translatePoint(data.message.pos);
@@ -344,56 +414,56 @@ function join() {
                         let touch = object.touches[0]
                         object.touches = object.touches.filter(item => item.touch_id !== data.message.touch_id)
 
-                        if (object.touches.length < 1 && touch != undefined) {
-                            let distx = (touch.pos.x - touch.lastPos.x) * 0.8
-                            let disty = (touch.pos.y - touch.lastPos.y) * 0.8
+                        // if (object.touches.length < 1 && touch != undefined) {
+                        //     let distx = (touch.pos.x - touch.lastPos.x) * 0.8
+                        //     let disty = (touch.pos.y - touch.lastPos.y) * 0.8
 
-                            let disabled = false
-                            let disabledx = false
-                            let disabledy = false
-                            setInterval(() => {
-                                if (object.touches.length < 1 && !disabled) {
-                                    if (!disabledx) {
-                                        object.element.style.left = (object.element.offsetLeft + distx) + "px"
-                                        console.log(distx)
-                                        if (object.offsetLeft <= 0 || object.offsetLeft >= total_size.x) {
-                                            distx = -distx
-                                        }
-                                        if (distx > 0) {
-                                            distx -= 2
-                                            if (distx < 0) {
-                                                disabledx = true
-                                            }
-                                        } else {
-                                            distx += 2
-                                            if (distx > 0) {
-                                                disabledx = true
-                                            }
-                                        }
-                                    }
-                                    if (!disabledy) {
-                                        console.log(disty)
-                                        object.element.style.top = (object.element.offsetTop + disty) + "px"
-                                        if (object.offsetTop <= 0 || object.offsetTop >= total_size.y) {
-                                            disty = -disty
-                                        }
-                                        if (disty > 0) {
-                                            disty -= 2
-                                            if (disty < 0) {
-                                                disabledy = true
-                                            }
-                                        } else {
-                                            disty += 2
-                                            if (disty > 0) {
-                                                disabledy = true
-                                            }
-                                        }
-                                    }
-                                } else {
-                                    disabled = true;
-                                }
-                            }, 10)
-                        }
+                        //     let disabled = false
+                        //     let disabledx = false
+                        //     let disabledy = false
+                        //     setInterval(() => {
+                        //         if (object.touches.length < 1 && !disabled) {
+                        //             if (!disabledx) {
+                        //                 object.element.style.left = (object.element.offsetLeft + distx) + "px"
+                        //                 console.log(distx)
+                        //                 if (object.offsetLeft <= 0 || object.offsetLeft >= total_size.x) {
+                        //                     distx = -distx
+                        //                 }
+                        //                 if (distx > 0) {
+                        //                     distx -= 2
+                        //                     if (distx < 0) {
+                        //                         disabledx = true
+                        //                     }
+                        //                 } else {
+                        //                     distx += 2
+                        //                     if (distx > 0) {
+                        //                         disabledx = true
+                        //                     }
+                        //                 }
+                        //             }
+                        //             if (!disabledy) {
+                        //                 console.log(disty)
+                        //                 object.element.style.top = (object.element.offsetTop + disty) + "px"
+                        //                 if (object.offsetTop <= 0 || object.offsetTop >= total_size.y) {
+                        //                     disty = -disty
+                        //                 }
+                        //                 if (disty > 0) {
+                        //                     disty -= 2
+                        //                     if (disty < 0) {
+                        //                         disabledy = true
+                        //                     }
+                        //                 } else {
+                        //                     disty += 2
+                        //                     if (disty > 0) {
+                        //                         disabledy = true
+                        //                     }
+                        //                 }
+                        //             }
+                        //         } else {
+                        //             disabled = true;
+                        //         }
+                        //     }, 10)
+                        // }
                     }
                 }
             }
@@ -420,7 +490,7 @@ function mouseevent(type, evt) {
 
 function touchevent(type, evt) {
     if (document.getElementById("toolbox").hidden) {
-        // evt.preventDefault();
+        evt.preventDefault();
 
         for (let touch of evt.changedTouches) {
             sc.add({
@@ -437,8 +507,6 @@ function touchevent(type, evt) {
 }
 
 // WebSocket server connection API
-
-var CONNURL = "ws://10.10.215.146:9001"
 
 var ServerconnService = /** @class */ (function () {
     function ServerconnService() {
