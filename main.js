@@ -1,4 +1,4 @@
-var CONNURL = "wss://home.omarelamri.me:9001"
+var CONNURL = "wss://server.thelemonayd.com:8123"
 
 // Global Variables
 
