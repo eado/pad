@@ -490,7 +490,7 @@ function mouseevent(type, evt) {
 
 function touchevent(type, evt) {
     if (document.getElementById("toolbox").hidden) {
-        evt.preventDefault();
+        // evt.preventDefault();
 
         for (let touch of evt.changedTouches) {
             sc.add({
